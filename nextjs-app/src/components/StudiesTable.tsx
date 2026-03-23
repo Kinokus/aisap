@@ -5,9 +5,13 @@ import { formatLvef } from "@/utils/formatLvef";
 
 type StudiesTableProps = {
   studies: StudySummary[];
+  onPatientIdClick?: (patientId: string) => void;
 };
 
-export default function StudiesTable({ studies }: StudiesTableProps) {
+export default function StudiesTable({
+  studies,
+  onPatientIdClick,
+}: StudiesTableProps) {
   return (
     <div className="mt-8">
       <h2 className="text-base font-semibold text-zinc-900">Studies</h2>
@@ -42,7 +46,14 @@ export default function StudiesTable({ studies }: StudiesTableProps) {
                   <div className="font-semibold text-zinc-900">
                     {s.patientName}
                   </div>
-                  <div className="text-xs text-zinc-500">{s.patientId}</div>
+                  <button
+                    type="button"
+                    className="text-left text-xs text-zinc-500 hover:text-zinc-700 hover:underline"
+                    onClick={() => onPatientIdClick?.(s.patientId)}
+                    aria-label={`Filter studies for patient ${s.patientId}`}
+                  >
+                    {s.patientId}
+                  </button>
                 </td>
                 <td className="px-4 py-2 text-zinc-900">{s.studyDate}</td>
                 <td className="px-4 py-2 text-zinc-900">

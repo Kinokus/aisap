@@ -13,6 +13,10 @@ export default function StudiesPage() {
   const [statusFilter, setStatusFilter] = useState<StudyStatus | "all">("all");
   const [patientIdFilter, setPatientIdFilter] = useState<string>("");
 
+  function handlePatientIdClick(patientId: string) {
+    setPatientIdFilter(patientId);
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -173,7 +177,7 @@ export default function StudiesPage() {
           </p>
         </div>
 
-        <StudiesTable studies={filteredStudies} />
+        <StudiesTable studies={filteredStudies} onPatientIdClick={handlePatientIdClick} />
       </section>
     </main>
   );

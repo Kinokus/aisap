@@ -10,6 +10,12 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 - **Studies list** — studies are shown in a filtered, sorted list.
 - **Study preview** — open a selected study for a detailed view; the back link returns you to the studies list with the same filters, sorting, and pagination as when you opened the study.
 
+## TODO
+
+Tracked from inline `TODO` / `FIXME`-style comments in the codebase:
+
+- *(None found — search covered project sources under `nextjs-app` and the repo root, excluding dependencies.)*
+
 ## Getting Started
 
 First, run the development server:

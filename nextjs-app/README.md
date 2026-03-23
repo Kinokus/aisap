@@ -10,43 +10,133 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 - **Studies list** — studies are shown in a filtered, sorted list.
 - **Study preview** — open a selected study for a detailed view; the back link returns you to the studies list with the same filters, sorting, and pagination as when you opened the study.
 
+Application code lives in this directory (`nextjs-app`). A `docker-compose.yml` file for running the app in containers lives in the **parent directory** (repository root).
+
+## Prerequisites
+
+- **Node.js** 20 or newer (aligned with the Docker images).
+- **npm** — the repo includes `package-lock.json`; use `npm ci` for reproducible installs.
+- **Docker** (optional) — [Docker Engine](https://docs.docker.com/engine/install/) with [Compose V2](https://docs.docker.com/compose/) (`docker compose`) for container-based workflows.
+
+## Getting started (local, no Docker)
+
+From this directory (`nextjs-app`):
+
+```bash
+npm ci
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+The dev server uses hot reload: edits under `src/` (and other app files) refresh automatically.
+
+### npm scripts
+
+| Command        | Description                          |
+| -------------- | ------------------------------------ |
+| `npm run dev`  | Next.js development server           |
+| `npm run build`| Production build                     |
+| `npm run start`| Production server (run after `build`)|
+| `npm run lint` | ESLint                               |
+
+## Docker
+
+Docker files:
+
+| File                 | Role                                      |
+| -------------------- | ----------------------------------------- |
+| `Dockerfile`         | Multi-stage production build (standalone) |
+| `Dockerfile.dev`     | Dev base image (Node 20 Alpine)           |
+| `../docker-compose.yml` | `web` (prod) and `dev` (hot reload)    |
+
+**Run all `docker compose` commands from the repository root** (the directory that contains `docker-compose.yml` and the `nextjs-app` folder), not from inside `nextjs-app`.
+
+### Important: one service at a time
+
+Both `web` and `dev` publish **host port 3000**. Start **one** service per session:
+
+- **Production:** `docker compose up web`
+- **Development:** `docker compose up dev`
+
+Do **not** run `docker compose up` with no service name; Compose would try to start both services and the second bind to port 3000 would fail.
+
+### Production (`web`)
+
+Builds the app with `next build` (standalone output) and runs `node server.js` as a non-root user.
+
+```bash
+# from repository root
+docker compose build web
+docker compose up web
+```
+
+Detached (background):
+
+```bash
+docker compose up -d web
+```
+
+Stop:
+
+```bash
+docker compose down
+```
+
+Then open [http://localhost:3000](http://localhost:3000).
+
+### Development (`dev`)
+
+Mounts `./nextjs-app` into the container, keeps `node_modules` and `.next` in named volumes (so Linux dependencies are consistent and the bind mount does not wipe them), enables polling for file watching on Docker Desktop, and runs `next dev` bound to `0.0.0.0`.
+
+```bash
+# from repository root
+docker compose build dev
+docker compose up dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). Code changes on the host should trigger reloads; if they do not, ensure `WATCHPACK_POLLING` remains enabled (it is set in Compose for the `dev` service).
+
+### After changing dependencies
+
+If you edit `package.json` or `package-lock.json`, refresh modules inside the dev stack:
+
+```bash
+docker compose run --rm dev sh -c "npm ci"
+```
+
+To fully reset dev container volumes (`node_modules` and `.next` caches), remove them when stopping the stack:
+
+```bash
+docker compose down -v
+docker compose up dev
+```
+
+The next start runs `npm ci` again and repopulates the volumes. Use this when dependencies are badly out of sync; for small lockfile updates, prefer `docker compose run --rm dev sh -c "npm ci"` above.
+
+### Production image without Compose
+
+```bash
+# from repository root
+docker build -t aisap-web -f nextjs-app/Dockerfile nextjs-app
+docker run -p 3000:3000 aisap-web
+```
+
 ## TODO
 
 Tracked from inline `TODO` / `FIXME`-style comments in the codebase:
 
 - *(None found — search covered project sources under `nextjs-app` and the repo root, excluding dependencies.)*
 
-## Getting Started
+## Learn more
 
-First, run the development server:
+- [Next.js Documentation](https://nextjs.org/docs) — features and APIs.
+- [Learn Next.js](https://nextjs.org/learn) — interactive tutorial.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a font family from Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) — learn about Next.js features and APIs.
-- [Learn Next.js](https://nextjs.org/learn) — an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js). Your feedback and contributions are welcome.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to optimize and load [Geist](https://vercel.com/font).
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) is a common choice for Next.js apps.
 
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more options, including self-hosted and container deployments.

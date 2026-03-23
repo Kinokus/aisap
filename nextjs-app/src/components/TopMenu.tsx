@@ -4,10 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-  { href: "/summary", label: "Summary" },
+  { href: "/", label: "Summary" },
   { href: "/studies", label: "Studies" },
 
 ] as const;
@@ -29,7 +26,7 @@ export function TopMenu() {
           {links.map((link) => {
             const isActive =
               link.href === "/"
-                ? pathname === "/"
+                ? pathname === "/" || pathname === "/summary"
                 : pathname === link.href || pathname.startsWith(`${link.href}/`);
 
             return (

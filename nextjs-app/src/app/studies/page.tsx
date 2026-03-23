@@ -154,6 +154,25 @@ function StudiesPageContent() {
     syncListStateToUrl({ nextPage: 1, nextPatientIdFilter: patientId });
   }
 
+  async function handleStatusChange(studyId: string, status: StudyStatus) {
+    const res = await fetch(`/api/studies/${studyId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to update study status.');
+    }
+
+    setStudies((current) => {
+      if (!current) return current;
+      return current.map((study) => (study.id === studyId ? { ...study, status } : study));
+    });
+  }
+
   useEffect(() => {
     const pageParam = searchParams.get('page');
     const pageSizeParam = searchParams.get('pageSize');
@@ -498,6 +517,7 @@ function StudiesPageContent() {
             syncListStateToUrl({ nextPage: 1, nextPageSize });
           }}
           onPatientIdClick={handlePatientIdClick}
+          onStatusChange={handleStatusChange}
         />
       </section>
     </main>

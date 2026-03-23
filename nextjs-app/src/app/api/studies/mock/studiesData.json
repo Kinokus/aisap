@@ -66,7 +66,7 @@
     "studyDate": "2026-09-09",
     "indication": "Arrhythmia",
     "lvef": 42,
-    "status": "pending",
+    "status": "reviewed",
     "thumbnailUrl": "https://picsum.photos/seed/study-007-93590/150/150"
   },
   {
@@ -856,7 +856,7 @@
     "studyDate": "2019-10-25",
     "indication": "Arrhythmia",
     "lvef": 44,
-    "status": "reviewed",
+    "status": "pending",
     "thumbnailUrl": "https://picsum.photos/seed/study-086-83893/150/150"
   },
   {

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
-import type { StudySummary } from "@/types/Study";
+import { StudyStatus } from "@/types/Study";
+import type { StudySummary, StudyStatus as StudyStatusType } from "@/types/Study";
 import { formatLvef } from "@/utils/formatLvef";
 
 type PageSizeOption = 10 | 25 | 50 | 100;
@@ -18,6 +19,7 @@ type StudiesTableProps = {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: PageSizeOption) => void;
   onPatientIdClick?: (patientId: string) => void;
+  onStatusChange: (studyId: string, status: StudyStatusType) => Promise<void>;
 };
 
 export default function StudiesTable({
@@ -29,7 +31,12 @@ export default function StudiesTable({
   onPageChange,
   onPageSizeChange,
   onPatientIdClick,
+  onStatusChange,
 }: StudiesTableProps) {
+  const [editingStudyId, setEditingStudyId] = useState<string | null>(null);
+  const [editingStatus, setEditingStatus] = useState<StudyStatusType>(StudyStatus.Pending);
+  const [savingStudyId, setSavingStudyId] = useState<string | null>(null);
+
   const totalItems = studies.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
@@ -155,7 +162,64 @@ export default function StudiesTable({
                   {formatLvef(s.lvef)}
                 </td>
                 <td className="px-4 py-2 text-zinc-900">
-                  {String(s.status)}
+                  {editingStudyId === s.id ? (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={editingStatus}
+                        onChange={(e) => setEditingStatus(e.target.value as StudyStatusType)}
+                        className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900"
+                        aria-label={`Edit status for ${s.patientName}`}
+                        disabled={savingStudyId === s.id}
+                      >
+                        {Object.values(StudyStatus).map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        className="rounded-md border border-zinc-200 bg-zinc-900 px-2 py-1 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={async () => {
+                          try {
+                            setSavingStudyId(s.id);
+                            await onStatusChange(s.id, editingStatus);
+                            setEditingStudyId(null);
+                          } finally {
+                            setSavingStudyId(null);
+                          }
+                        }}
+                        disabled={savingStudyId === s.id}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={() => {
+                          setEditingStudyId(null);
+                          setEditingStatus(s.status);
+                        }}
+                        disabled={savingStudyId === s.id}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span>{String(s.status)}</span>
+                      <button
+                        type="button"
+                        className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-50"
+                        onClick={() => {
+                          setEditingStudyId(s.id);
+                          setEditingStatus(s.status);
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-2 text-right">
                   <Link

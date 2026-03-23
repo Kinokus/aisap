@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 
-import type { Study } from '@/types/Study';
+import {
+  fetchSelectedStudy,
+  patchSelectedStudyStatus,
+  type StudyDetailResponse,
+} from '@/services/studiesService';
 import { StudyStatus } from '@/types/Study';
-
-type StudyDetailResponse = Study | { error: string };
 
 function formatLvef(value: number): string {
   // Mock data uses integer percentages.
@@ -41,12 +43,7 @@ function StudyDetailPageContent() {
         setData(null);
         setUpdateError(null);
 
-        const res = await fetch(`/api/studies/selected/${id}`);
-        const json = (await res.json()) as StudyDetailResponse;
-
-        if (!res.ok) {
-          throw new Error(json && 'error' in json ? json.error : 'Failed to load study.');
-        }
+        const json = await fetchSelectedStudy(id);
 
         if (!cancelled) setData(json);
       } catch (e) {
@@ -113,18 +110,7 @@ function StudyDetailPageContent() {
     setUpdatingStatus(true);
     setUpdateError(null);
     try {
-      const res = await fetch(`/api/studies/selected/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: effectiveStatusDraft }),
-      });
-
-      const json = (await res.json()) as StudyDetailResponse;
-      if (!res.ok) {
-        throw new Error(json && 'error' in json ? json.error : 'Failed to update study.');
-      }
+      const json = await patchSelectedStudyStatus(id, effectiveStatusDraft as StudyStatus);
 
       setData(json);
     } catch (e) {

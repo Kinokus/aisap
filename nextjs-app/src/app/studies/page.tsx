@@ -8,6 +8,10 @@ import StudiesTable, {
   type StudiesTableSortKey,
 } from '@/components/StudiesTable';
 import { LvefFilter, isLvefFilter } from '@/enums/LvefFilter';
+import {
+  fetchStudiesSummaries,
+  patchStudyStatus,
+} from '@/services/studiesService';
 import type { StudyIndication, StudyStatus, StudySummary } from '@/types/Study';
 
 const pageSizeOptions = [10, 25, 50, 100] as const;
@@ -233,17 +237,7 @@ function StudiesPageContent() {
   }
 
   async function handleStatusChange(studyId: string, status: StudyStatus) {
-    const res = await fetch(`/api/studies/${studyId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status }),
-    });
-
-    if (!res.ok) {
-      throw new Error('Failed to update study status.');
-    }
+    await patchStudyStatus(studyId, status);
 
     setStudies((current) => {
       if (!current) return current;
@@ -363,12 +357,7 @@ function StudiesPageContent() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch('/api/studies');
-        const json = (await res.json()) as StudySummary[];
-
-        if (!res.ok) {
-          throw new Error('Failed to load studies.');
-        }
+        const json = await fetchStudiesSummaries();
 
         if (!cancelled) setStudies(json);
       } catch (e) {

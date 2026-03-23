@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import type { Study } from "@/types/Study";
 
@@ -73,6 +73,12 @@ export default function StudyDetailPage() {
             >
               Back to Summary
             </Link>
+            <Link
+              href="/studies"
+              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
+            >
+              Back to Studies
+            </Link>
           </div>
 
           <div className="rounded-lg border border-zinc-200 bg-white p-4">
@@ -98,14 +104,20 @@ export default function StudyDetailPage() {
             </p>
           </div>
 
-          <div className="pt-2">
+          <nav className="pt-2 flex items-center gap-2">
             <Link
               href="/summary"
               className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
             >
               Back to Summary
             </Link>
-          </div>
+            <Link
+              href="/studies"
+              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
+            >
+              Back to Studies
+            </Link>
+          </nav>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">

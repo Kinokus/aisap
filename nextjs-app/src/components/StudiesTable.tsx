@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
 
-import { StudyStatus } from "@/types/Study";
-import type { StudySummary, StudyStatus as StudyStatusType } from "@/types/Study";
-import { formatLvef } from "@/utils/formatLvef";
+import type { StudyStatus as StudyStatusType, StudySummary } from '@/types/Study';
+import { StudyStatus } from '@/types/Study';
+import { formatLvef } from '@/utils/formatLvef';
 
 type PageSizeOption = 10 | 25 | 50 | 100;
 
@@ -58,18 +58,18 @@ export default function StudiesTable({
     };
   }, [studies, page, pageSize, totalItems]);
 
-  function getVisiblePages(current: number, total: number): Array<number | "ellipsis"> {
+  function getVisiblePages(current: number, total: number): Array<number | 'ellipsis'> {
     if (total <= 7) {
       return Array.from({ length: total }, (_, i) => i + 1);
     }
 
     const left = Math.max(2, current - 1);
     const right = Math.min(total - 1, current + 1);
-    const pages: Array<number | "ellipsis"> = [1];
+    const pages: Array<number | 'ellipsis'> = [1];
 
-    if (left > 2) pages.push("ellipsis");
+    if (left > 2) pages.push('ellipsis');
     for (let p = left; p <= right; p++) pages.push(p);
-    if (right < total - 1) pages.push("ellipsis");
+    if (right < total - 1) pages.push('ellipsis');
 
     pages.push(total);
     return pages;
@@ -85,9 +85,8 @@ export default function StudiesTable({
             <>No studies available.</>
           ) : (
             <>
-              Showing{" "}
-              <span className="font-semibold text-zinc-900">{startItemIndex}</span>-
-              <span className="font-semibold text-zinc-900">{endItemIndex}</span> of{" "}
+              Showing <span className="font-semibold text-zinc-900">{startItemIndex}</span>-
+              <span className="font-semibold text-zinc-900">{endItemIndex}</span> of{' '}
               <span className="font-semibold text-zinc-900">{totalItems}</span>
             </>
           )}
@@ -118,33 +117,19 @@ export default function StudiesTable({
         <table className="min-w-full text-sm">
           <thead className="bg-zinc-50">
             <tr>
-              <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                Patient
-              </th>
-              <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                Study Date
-              </th>
-              <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                Indication
-              </th>
-              <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                LVEF
-              </th>
-              <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                Status
-              </th>
-              <th className="px-4 py-2 text-right font-medium text-zinc-700">
-                Open
-              </th>
+              <th className="px-4 py-2 text-left font-medium text-zinc-700">Patient</th>
+              <th className="px-4 py-2 text-left font-medium text-zinc-700">Study Date</th>
+              <th className="px-4 py-2 text-left font-medium text-zinc-700">Indication</th>
+              <th className="px-4 py-2 text-left font-medium text-zinc-700">LVEF</th>
+              <th className="px-4 py-2 text-left font-medium text-zinc-700">Status</th>
+              <th className="px-4 py-2 text-right font-medium text-zinc-700"></th>
             </tr>
           </thead>
           <tbody>
             {pageStudies.map((s) => (
-              <tr key={s.id} className="border-t border-zinc-100">
+              <tr key={s.id} className="group border-t border-zinc-100">
                 <td className="px-4 py-2">
-                  <div className="font-semibold text-zinc-900">
-                    {s.patientName}
-                  </div>
+                  <div className="font-semibold text-zinc-900">{s.patientName}</div>
                   <button
                     type="button"
                     className="text-left text-xs text-zinc-500 hover:text-zinc-700 hover:underline"
@@ -155,13 +140,9 @@ export default function StudiesTable({
                   </button>
                 </td>
                 <td className="px-4 py-2 text-zinc-900">{s.studyDate}</td>
-                <td className="px-4 py-2 text-zinc-900">
-                  {String(s.indication)}
-                </td>
-                <td className="px-4 py-2 font-semibold text-zinc-900">
-                  {formatLvef(s.lvef)}
-                </td>
-                <td className="px-4 py-2 text-zinc-900">
+                <td className="px-4 py-2 text-zinc-900">{String(s.indication)}</td>
+                <td className="px-4 py-2 font-semibold text-zinc-900">{formatLvef(s.lvef)}</td>
+                <td className="px-4 py-2 text-zinc-900 w-52">
                   {editingStudyId === s.id ? (
                     <div className="flex items-center gap-2">
                       <select
@@ -179,7 +160,7 @@ export default function StudiesTable({
                       </select>
                       <button
                         type="button"
-                        className="rounded-md border border-zinc-200 bg-zinc-900 px-2 py-1 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-md p-2 text-xl disabled:cursor-not-allowed disabled:opacity-50 ml-auto"
                         onClick={async () => {
                           try {
                             setSavingStudyId(s.id);
@@ -191,32 +172,32 @@ export default function StudiesTable({
                         }}
                         disabled={savingStudyId === s.id}
                       >
-                        Save
+                        ✓
                       </button>
                       <button
                         type="button"
-                        className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-md p-2 text-zinc-900  disabled:cursor-not-allowed disabled:opacity-50 text-xl"
                         onClick={() => {
                           setEditingStudyId(null);
                           setEditingStatus(s.status);
                         }}
                         disabled={savingStudyId === s.id}
                       >
-                        Cancel
+                        ✖
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <span>{String(s.status)}</span>
                       <button
                         type="button"
-                        className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-900 hover:bg-zinc-50"
+                        className="invisible rounded-md  p-2 text-zinc-900  group-hover:visible focus-visible:visible text-xl"
                         onClick={() => {
                           setEditingStudyId(s.id);
                           setEditingStatus(s.status);
                         }}
                       >
-                        Edit
+                        ✎
                       </button>
                     </div>
                   )}
@@ -224,9 +205,7 @@ export default function StudiesTable({
                 <td className="px-4 py-2 text-right">
                   <Link
                     href={
-                      listQueryString
-                        ? `/studies/${s.id}?${listQueryString}`
-                        : `/studies/${s.id}`
+                      listQueryString ? `/studies/${s.id}?${listQueryString}` : `/studies/${s.id}`
                     }
                     aria-label={`Open study ${s.id}`}
                     className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
@@ -238,10 +217,7 @@ export default function StudiesTable({
             ))}
             {totalItems === 0 ? (
               <tr>
-                <td
-                  className="px-4 py-6 text-center text-zinc-600"
-                  colSpan={6}
-                >
+                <td className="px-4 py-6 text-center text-zinc-600" colSpan={6}>
                   No studies available.
                 </td>
               </tr>
@@ -275,7 +251,7 @@ export default function StudiesTable({
 
           <div className="flex items-center justify-center gap-1 sm:justify-end">
             {getVisiblePages(page, totalPages).map((p, idx) => {
-              if (p === "ellipsis") {
+              if (p === 'ellipsis') {
                 return (
                   <span key={`ellipsis-${idx}`} className="px-2 text-sm text-zinc-500">
                     ...
@@ -289,11 +265,11 @@ export default function StudiesTable({
                   key={p}
                   type="button"
                   onClick={() => onPageChange(p)}
-                  aria-current={active ? "page" : undefined}
+                  aria-current={active ? 'page' : undefined}
                   className={
                     active
-                      ? "rounded-md border border-zinc-200 bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white"
-                      : "rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
+                      ? 'rounded-md border border-zinc-200 bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white'
+                      : 'rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50'
                   }
                 >
                   {p}
@@ -306,4 +282,3 @@ export default function StudiesTable({
     </div>
   );
 }
-

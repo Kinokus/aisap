@@ -622,7 +622,6 @@ function StudiesPageContent() {
               </button>
             </div>
           </div>
-
         </div>
 
         <StudiesTable

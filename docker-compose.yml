@@ -1,3 +1,6 @@
+# Run one service at a time (both use host port 3000):
+#   docker compose up web
+#   docker compose up dev
 services:
   web:
     build:
@@ -6,3 +9,25 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
+
+  dev:
+    build:
+      context: ./nextjs-app
+      dockerfile: Dockerfile.dev
+    stdin_open: true
+    tty: true
+    working_dir: /app
+    volumes:
+      - ./nextjs-app:/app
+      - dev_node_modules:/app/node_modules
+      - dev_next:/app/.next
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      WATCHPACK_POLLING: "true"
+    command: sh -c "npm ci && next dev -H 0.0.0.0 -p 3000"
+
+volumes:
+  dev_node_modules:
+  dev_next:

@@ -1,13 +1,14 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 
 import StudiesTable from '@/components/StudiesTable';
 import type { StudyIndication, StudyStatus, StudySummary } from '@/types/Study';
 
 const pageSizeOptions = [10, 25, 50, 100] as const;
 type PageSize = (typeof pageSizeOptions)[number];
+const studiesPaginationStorageKey = 'studies.pagination';
 
 function isPageSize(value: number): value is PageSize {
   return pageSizeOptions.includes(value as PageSize);
@@ -23,9 +24,7 @@ function StudiesPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [indicationFilter, setIndicationFilter] = useState<StudyIndication | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<StudyStatus | 'all'>('all');
-  const [lvefFilter, setLvefFilter] = useState<'all' | 'normal' | 'midly' | 'severly'>(
-    'all',
-  );
+  const [lvefFilter, setLvefFilter] = useState<'all' | 'normal' | 'midly' | 'severly'>('all');
   const [patientIdFilter, setPatientIdFilter] = useState<string>('');
   const [patientNameFilter, setPatientNameFilter] = useState<string>('');
   const [pageSize, setPageSize] = useState<PageSize>(10);
@@ -38,6 +37,25 @@ function StudiesPageContent() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
+  function readStoredPagination(): { page: number; pageSize: PageSize } | null {
+    if (typeof window === 'undefined') return null;
+    const raw = window.sessionStorage.getItem(studiesPaginationStorageKey);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw) as { page?: number; pageSize?: number };
+      const storedPage =
+        typeof parsed.page === 'number' && Number.isInteger(parsed.page) && parsed.page >= 1
+          ? parsed.page
+          : null;
+      const storedPageSize =
+        typeof parsed.pageSize === 'number' && isPageSize(parsed.pageSize) ? parsed.pageSize : null;
+      if (!storedPage || !storedPageSize) return null;
+      return { page: storedPage, pageSize: storedPageSize };
+    } catch {
+      return null;
+    }
+  }
+
   function handlePatientIdClick(patientId: string) {
     setPatientIdFilter(patientId);
     setPage(1);
@@ -45,20 +63,38 @@ function StudiesPageContent() {
   }
 
   useEffect(() => {
-    const rawPage = Number(searchParams.get('page'));
-    const parsedPage = Number.isInteger(rawPage) && rawPage >= 1 ? rawPage : 1;
-    const rawPageSize = Number(searchParams.get('pageSize'));
-    const parsedPageSize = isPageSize(rawPageSize) ? rawPageSize : 10;
+    const pageParam = searchParams.get('page');
+    const pageSizeParam = searchParams.get('pageSize');
+    const hasPaginationInUrl = pageParam !== null && pageSizeParam !== null;
+    const stored = !hasPaginationInUrl ? readStoredPagination() : null;
+
+    const rawPage = Number(pageParam);
+    const parsedPageFromUrl = Number.isInteger(rawPage) && rawPage >= 1 ? rawPage : 1;
+    const rawPageSize = Number(pageSizeParam);
+    const parsedPageSizeFromUrl = isPageSize(rawPageSize) ? rawPageSize : 10;
+    const parsedPage = stored?.page ?? parsedPageFromUrl;
+    const parsedPageSize = stored?.pageSize ?? parsedPageSizeFromUrl;
 
     setPage((current) => (current === parsedPage ? current : parsedPage));
     setPageSize((current) => (current === parsedPageSize ? current : parsedPageSize));
 
     const canonicalPage = String(parsedPage);
     const canonicalPageSize = String(parsedPageSize);
-    if (searchParams.get('page') !== canonicalPage || searchParams.get('pageSize') !== canonicalPageSize) {
+    if (
+      searchParams.get('page') !== canonicalPage ||
+      searchParams.get('pageSize') !== canonicalPageSize
+    ) {
       syncPaginationToUrl(parsedPage, parsedPageSize);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage.setItem(
+      studiesPaginationStorageKey,
+      JSON.stringify({ page, pageSize }),
+    );
+  }, [page, pageSize]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,13 +162,14 @@ function StudiesPageContent() {
   }, [studies, indicationFilter, patientIdFilter, patientNameFilter, statusFilter, lvefFilter]);
 
   useEffect(() => {
+    if (studies === null) return;
     const totalPages = Math.max(1, Math.ceil(filteredStudies.length / pageSize));
     const clampedPage = Math.min(page, totalPages);
     if (clampedPage !== page) {
       setPage(clampedPage);
       syncPaginationToUrl(clampedPage, pageSize);
     }
-  }, [filteredStudies.length, page, pageSize]);
+  }, [studies, filteredStudies.length, page, pageSize]);
 
   if (loading) {
     return (
@@ -262,30 +299,28 @@ function StudiesPageContent() {
                 />
               </label>
 
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  onClick={() => {
-                    setIndicationFilter('all');
-                    setStatusFilter('all');
-                    setLvefFilter('all');
-                    setPatientIdFilter('');
-                    setPatientNameFilter('');
-                    setPage(1);
-                    syncPaginationToUrl(1, pageSize);
-                  }}
-                  disabled={
-                    indicationFilter === 'all' &&
-                    statusFilter === 'all' &&
-                    lvefFilter === 'all' &&
-                    patientIdFilter.trim() === '' &&
-                    patientNameFilter.trim() === ''
-                  }
-                >
-                  Reset
-                </button>
-              </div>
+              <button
+                type="button"
+                className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 h-10 mt-auto"
+                onClick={() => {
+                  setIndicationFilter('all');
+                  setStatusFilter('all');
+                  setLvefFilter('all');
+                  setPatientIdFilter('');
+                  setPatientNameFilter('');
+                  setPage(1);
+                  syncPaginationToUrl(1, pageSize);
+                }}
+                disabled={
+                  indicationFilter === 'all' &&
+                  statusFilter === 'all' &&
+                  lvefFilter === 'all' &&
+                  patientIdFilter.trim() === '' &&
+                  patientNameFilter.trim() === ''
+                }
+              >
+                Reset
+              </button>
             </div>
           </div>
 

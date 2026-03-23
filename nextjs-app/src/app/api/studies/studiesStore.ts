@@ -6,7 +6,7 @@ import type { Study } from "@/types/Study";
 
 const STUDIES_DATA_PATH = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
-  "../hello/mock/studiesData.json"
+  "./mock/studiesData.json"
 );
 
 async function parseStudies(json: string): Promise<Study[]> {

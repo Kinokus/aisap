@@ -1,4 +1,4 @@
-import studiesData from "@/app/api/hello/mock/studiesData.json";
+import studiesData from "@/app/api/studies/mock/studiesData.json";
 import { NextResponse } from "next/server";
 
 import type { Study, StudyIndication, StudyStatus, StudySummary } from "@/types/Study";

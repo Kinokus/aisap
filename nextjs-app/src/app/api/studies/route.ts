@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 
-import studiesData from "@/app/api/hello/mock/studiesData.json";
 import type { Study, StudyIndication, StudyStatus, StudySummary } from "@/types/Study";
 
+import { loadStudies } from "./studiesStore";
+
 export async function GET(): Promise<NextResponse<StudySummary[]>> {
-  const studies = studiesData as unknown as Study[];
+  const studies = await loadStudies();
 
   const studiesSummary: StudySummary[] = studies.map((study) => ({
     id: study.id,

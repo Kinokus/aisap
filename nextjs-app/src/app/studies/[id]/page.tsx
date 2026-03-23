@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { StudyStatus } from "@/types/Study";
 import type { Study } from "@/types/Study";
 
 type StudyDetailResponse = Study | { error: string };
@@ -19,6 +20,9 @@ export default function StudyDetailPage() {
 
   const [data, setData] = useState<StudyDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [statusDraft, setStatusDraft] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
@@ -29,6 +33,7 @@ export default function StudyDetailPage() {
       try {
         setLoading(true);
         setData(null);
+        setUpdateError(null);
 
         const res = await fetch(`/api/studies/selected/${id}`);
         const json = (await res.json()) as StudyDetailResponse;
@@ -53,6 +58,12 @@ export default function StudyDetailPage() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (data && !("error" in data)) {
+      setStatusDraft(data.status);
+    }
+  }, [data]);
 
   if (loading) {
     return (
@@ -90,6 +101,36 @@ export default function StudyDetailPage() {
   }
 
   const study = data;
+  const statusOptions = Object.values(StudyStatus);
+  const effectiveStatusDraft = statusDraft || study.status;
+
+  async function handleSaveStatus() {
+    if (!id) return;
+    if (effectiveStatusDraft === study.status) return;
+
+    setUpdatingStatus(true);
+    setUpdateError(null);
+    try {
+      const res = await fetch(`/api/studies/selected/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: effectiveStatusDraft }),
+      });
+
+      const json = (await res.json()) as StudyDetailResponse;
+      if (!res.ok) {
+        throw new Error(json && "error" in json ? json.error : "Failed to update study.");
+      }
+
+      setData(json);
+    } catch (e) {
+      setUpdateError(e instanceof Error ? e.message : "Failed to update study.");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
 
   return (
     <main className="flex flex-1 items-start justify-center bg-zinc-50 px-4 py-12">
@@ -152,11 +193,37 @@ export default function StudyDetailPage() {
               </div>
               <div>
                 <div className="text-sm font-medium text-zinc-500">Status</div>
-                <div className="mt-1 text-base font-semibold text-zinc-900">
-                  {String(study.status)}
+                <div className="mt-1 flex items-center gap-2">
+                  <select
+                    className="flex-1 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={effectiveStatusDraft}
+                    onChange={(e) => setStatusDraft(e.target.value)}
+                    disabled={updatingStatus}
+                    aria-label="Study status"
+                  >
+                    {statusOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {String(s)}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={handleSaveStatus}
+                    disabled={updatingStatus || effectiveStatusDraft === study.status}
+                    aria-label="Save status"
+                  >
+                    {updatingStatus ? "Saving..." : "Save"}
+                  </button>
                 </div>
               </div>
             </div>
+
+            {updateError ? (
+              <p className="mt-3 text-sm text-red-700">{updateError}</p>
+            ) : null}
           </div>
 
           <div className="rounded-lg border border-zinc-200 bg-white p-4">

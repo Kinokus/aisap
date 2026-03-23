@@ -1,2 +1,4 @@
 .ssh/gitlab_ed25519
 .ssh/gitlab_ed25519.pub
+.ssh/github_ed25519
+.ssh/github_ed25519.pub

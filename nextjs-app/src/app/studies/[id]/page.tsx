@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import { StudyStatus } from "@/types/Study";
-import type { Study } from "@/types/Study";
+import type { Study } from '@/types/Study';
+import { StudyStatus } from '@/types/Study';
 
 type StudyDetailResponse = Study | { error: string };
 
@@ -22,7 +22,7 @@ export default function StudyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
-  const [statusDraft, setStatusDraft] = useState<string>("");
+  const [statusDraft, setStatusDraft] = useState<string>('');
 
   useEffect(() => {
     let cancelled = false;
@@ -39,14 +39,14 @@ export default function StudyDetailPage() {
         const json = (await res.json()) as StudyDetailResponse;
 
         if (!res.ok) {
-          throw new Error(json && "error" in json ? json.error : "Failed to load study.");
+          throw new Error(json && 'error' in json ? json.error : 'Failed to load study.');
         }
 
         if (!cancelled) setData(json);
       } catch (e) {
         if (cancelled) return;
         setData({
-          error: e instanceof Error ? e.message : "Failed to load study.",
+          error: e instanceof Error ? e.message : 'Failed to load study.',
         });
       } finally {
         if (!cancelled) setLoading(false);
@@ -60,7 +60,7 @@ export default function StudyDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    if (data && !("error" in data)) {
+    if (data && !('error' in data)) {
       setStatusDraft(data.status);
     }
   }, [data]);
@@ -73,17 +73,11 @@ export default function StudyDetailPage() {
     );
   }
 
-  if (!data || "error" in data) {
+  if (!data || 'error' in data) {
     return (
       <main className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-16">
         <section className="w-full max-w-3xl">
           <div className="mb-6">
-            <Link
-              href="/"
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
-            >
-              Back to Home
-            </Link>
             <Link
               href="/studies"
               className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
@@ -93,7 +87,9 @@ export default function StudyDetailPage() {
           </div>
 
           <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <p className="text-sm text-red-700">{data && "error" in data ? data.error : "Study not found."}</p>
+            <p className="text-sm text-red-700">
+              {data && 'error' in data ? data.error : 'Study not found.'}
+            </p>
           </div>
         </section>
       </main>
@@ -112,21 +108,21 @@ export default function StudyDetailPage() {
     setUpdateError(null);
     try {
       const res = await fetch(`/api/studies/selected/${id}`, {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status: effectiveStatusDraft }),
       });
 
       const json = (await res.json()) as StudyDetailResponse;
       if (!res.ok) {
-        throw new Error(json && "error" in json ? json.error : "Failed to update study.");
+        throw new Error(json && 'error' in json ? json.error : 'Failed to update study.');
       }
 
       setData(json);
     } catch (e) {
-      setUpdateError(e instanceof Error ? e.message : "Failed to update study.");
+      setUpdateError(e instanceof Error ? e.message : 'Failed to update study.');
     } finally {
       setUpdatingStatus(false);
     }
@@ -146,12 +142,6 @@ export default function StudyDetailPage() {
           </div>
 
           <nav className="pt-2 flex items-center gap-2">
-            <Link
-              href="/"
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
-            >
-              Back to Home
-            </Link>
             <Link
               href="/studies"
               className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
@@ -183,7 +173,9 @@ export default function StudyDetailPage() {
               </div>
               <div>
                 <div className="text-sm font-medium text-zinc-500">Indication</div>
-                <div className="mt-1 text-base font-semibold text-zinc-900">{String(study.indication)}</div>
+                <div className="mt-1 text-base font-semibold text-zinc-900">
+                  {String(study.indication)}
+                </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-zinc-500">LVEF</div>
@@ -215,15 +207,13 @@ export default function StudyDetailPage() {
                     disabled={updatingStatus || effectiveStatusDraft === study.status}
                     aria-label="Save status"
                   >
-                    {updatingStatus ? "Saving..." : "Save"}
+                    {updatingStatus ? 'Saving...' : 'Save'}
                   </button>
                 </div>
               </div>
             </div>
 
-            {updateError ? (
-              <p className="mt-3 text-sm text-red-700">{updateError}</p>
-            ) : null}
+            {updateError ? <p className="mt-3 text-sm text-red-700">{updateError}</p> : null}
           </div>
 
           <div className="rounded-lg border border-zinc-200 bg-white p-4">
@@ -241,4 +231,3 @@ export default function StudyDetailPage() {
     </main>
   );
 }
-

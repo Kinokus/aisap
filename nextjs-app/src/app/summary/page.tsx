@@ -42,6 +42,7 @@ export default function SummaryPage() {
   const [data, setData] = useState<StudiesSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAggregatedSummary, setShowAggregatedSummary] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,135 +116,170 @@ export default function SummaryPage() {
   return (
     <main className="flex flex-1 items-start justify-center bg-zinc-50 px-4 py-12">
       <section className="w-full max-w-5xl">
-        <header className="mb-6">
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
-            Summary
-          </h1>
-          <p className="mt-2 text-base leading-7 text-zinc-700">
-            Aggregated information across all studies from the mock dataset.
-          </p>
+        <header className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
+              Summary
+            </h1>
+            <p className="mt-2 text-base leading-7 text-zinc-700">
+              Aggregated information across all studies from the mock dataset.
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAggregatedSummary((v) => !v)}
+              aria-expanded={showAggregatedSummary}
+              aria-controls="aggregated-summary"
+              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              {showAggregatedSummary ? "Hide summary" : "Show summary"}
+            </button>
+          </div>
         </header>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              Total Studies
-            </p>
-            <p className="mt-2 text-3xl font-semibold text-zinc-900">
-              {overview.totalStudies}
-            </p>
-          </div>
+        {showAggregatedSummary ? (
+          <div id="aggregated-summary">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border border-zinc-200 bg-white p-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                  Total Studies
+                </p>
+                <p className="mt-2 text-3xl font-semibold text-zinc-900">
+                  {overview.totalStudies}
+                </p>
+              </div>
 
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              Avg LVEF
-            </p>
-            <p className="mt-2 text-3xl font-semibold text-zinc-900">
-              {formatLvef(overview.avgLvef)}
-            </p>
-          </div>
+              <div className="rounded-lg border border-zinc-200 bg-white p-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                  Avg LVEF
+                </p>
+                <p className="mt-2 text-3xl font-semibold text-zinc-900">
+                  {formatLvef(overview.avgLvef)}
+                </p>
+              </div>
 
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              LVEF Range
-            </p>
-            <p className="mt-2 text-base font-semibold text-zinc-900">
-              {formatLvef(overview.lvefMin)} - {formatLvef(overview.lvefMax)}
-            </p>
-          </div>
+              <div className="rounded-lg border border-zinc-200 bg-white p-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                  LVEF Range
+                </p>
+                <p className="mt-2 text-base font-semibold text-zinc-900">
+                  {formatLvef(overview.lvefMin)} - {formatLvef(overview.lvefMax)}
+                </p>
+              </div>
 
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              Date Range
-            </p>
-            <p className="mt-2 text-sm font-semibold text-zinc-900">
-              {overview.dateRange.earliest ?? "—"} <span className="text-zinc-400">→</span>{" "}
-              {overview.dateRange.latest ?? "—"}
-            </p>
-          </div>
-        </div>
+              <div className="rounded-lg border border-zinc-200 bg-white p-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                  Date Range
+                </p>
+                <p className="mt-2 text-sm font-semibold text-zinc-900">
+                  {overview.dateRange.earliest ?? "—"}{" "}
+                  <span className="text-zinc-400">→</span>{" "}
+                  {overview.dateRange.latest ?? "—"}
+                </p>
+              </div>
+            </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div>
-            <h2 className="text-base font-semibold text-zinc-900">Status Counts</h2>
-            <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
-              <table className="min-w-full text-sm">
-                <thead className="bg-zinc-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                      Status
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                      Count
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {statusRows.map((row) => (
-                    <tr key={row.status} className="border-t border-zinc-100">
-                      <td className="px-4 py-2 text-zinc-900">{String(row.status)}</td>
-                      <td className="px-4 py-2 font-semibold text-zinc-900">
-                        {row.count}
-                      </td>
-                    </tr>
-                  ))}
-                  {statusRows.length === 0 ? (
-                    <tr>
-                      <td className="px-4 py-6 text-center text-zinc-600" colSpan={2}>
-                        No status data.
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
+            <div className="mt-8 grid gap-6 lg:grid-cols-2">
+              <div>
+                <h2 className="text-base font-semibold text-zinc-900">
+                  Status Counts
+                </h2>
+                <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-zinc-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left font-medium text-zinc-700">
+                          Status
+                        </th>
+                        <th className="px-4 py-2 text-left font-medium text-zinc-700">
+                          Count
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {statusRows.map((row) => (
+                        <tr
+                          key={row.status}
+                          className="border-t border-zinc-100"
+                        >
+                          <td className="px-4 py-2 text-zinc-900">
+                            {String(row.status)}
+                          </td>
+                          <td className="px-4 py-2 font-semibold text-zinc-900">
+                            {row.count}
+                          </td>
+                        </tr>
+                      ))}
+                      {statusRows.length === 0 ? (
+                        <tr>
+                          <td
+                            className="px-4 py-6 text-center text-zinc-600"
+                            colSpan={2}
+                          >
+                            No status data.
+                          </td>
+                        </tr>
+                      ) : null}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div>
+                <h2 className="text-base font-semibold text-zinc-900">
+                  Indication Summaries
+                </h2>
+                <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-zinc-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left font-medium text-zinc-700">
+                          Indication
+                        </th>
+                        <th className="px-4 py-2 text-left font-medium text-zinc-700">
+                          Count
+                        </th>
+                        <th className="px-4 py-2 text-left font-medium text-zinc-700">
+                          Avg LVEF
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {indicationRows.map((row) => (
+                        <tr
+                          key={row.indication}
+                          className="border-t border-zinc-100"
+                        >
+                          <td className="px-4 py-2 text-zinc-900">
+                            {String(row.indication)}
+                          </td>
+                          <td className="px-4 py-2 font-semibold text-zinc-900">
+                            {row.count}
+                          </td>
+                          <td className="px-4 py-2 font-semibold text-zinc-900">
+                            {formatLvef(row.avgLvef)}
+                          </td>
+                        </tr>
+                      ))}
+                      {indicationRows.length === 0 ? (
+                        <tr>
+                          <td
+                            className="px-4 py-6 text-center text-zinc-600"
+                            colSpan={3}
+                          >
+                            No indication data.
+                          </td>
+                        </tr>
+                      ) : null}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div>
-            <h2 className="text-base font-semibold text-zinc-900">
-              Indication Summaries
-            </h2>
-            <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
-              <table className="min-w-full text-sm">
-                <thead className="bg-zinc-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                      Indication
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                      Count
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-zinc-700">
-                      Avg LVEF
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {indicationRows.map((row) => (
-                    <tr key={row.indication} className="border-t border-zinc-100">
-                      <td className="px-4 py-2 text-zinc-900">
-                        {String(row.indication)}
-                      </td>
-                      <td className="px-4 py-2 font-semibold text-zinc-900">
-                        {row.count}
-                      </td>
-                      <td className="px-4 py-2 font-semibold text-zinc-900">
-                        {formatLvef(row.avgLvef)}
-                      </td>
-                    </tr>
-                  ))}
-                  {indicationRows.length === 0 ? (
-                    <tr>
-                      <td className="px-4 py-6 text-center text-zinc-600" colSpan={3}>
-                        No indication data.
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        ) : null}
 
         <div className="mt-8">
           <h2 className="text-base font-semibold text-zinc-900">Studies</h2>

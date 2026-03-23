@@ -1,11 +1,23 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import StudiesTable from '@/components/StudiesTable';
 import type { StudyIndication, StudyStatus, StudySummary } from '@/types/Study';
 
+const pageSizeOptions = [10, 25, 50, 100] as const;
+type PageSize = (typeof pageSizeOptions)[number];
+
+function isPageSize(value: number): value is PageSize {
+  return pageSizeOptions.includes(value as PageSize);
+}
+
 export default function StudiesPage() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
   const [studies, setStudies] = useState<StudySummary[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,10 +28,37 @@ export default function StudiesPage() {
   );
   const [patientIdFilter, setPatientIdFilter] = useState<string>('');
   const [patientNameFilter, setPatientNameFilter] = useState<string>('');
+  const [pageSize, setPageSize] = useState<PageSize>(10);
+  const [page, setPage] = useState(1);
+
+  function syncPaginationToUrl(nextPage: number, nextPageSize: PageSize) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(nextPage));
+    params.set('pageSize', String(nextPageSize));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }
 
   function handlePatientIdClick(patientId: string) {
     setPatientIdFilter(patientId);
+    setPage(1);
+    syncPaginationToUrl(1, pageSize);
   }
+
+  useEffect(() => {
+    const rawPage = Number(searchParams.get('page'));
+    const parsedPage = Number.isInteger(rawPage) && rawPage >= 1 ? rawPage : 1;
+    const rawPageSize = Number(searchParams.get('pageSize'));
+    const parsedPageSize = isPageSize(rawPageSize) ? rawPageSize : 10;
+
+    setPage((current) => (current === parsedPage ? current : parsedPage));
+    setPageSize((current) => (current === parsedPageSize ? current : parsedPageSize));
+
+    const canonicalPage = String(parsedPage);
+    const canonicalPageSize = String(parsedPageSize);
+    if (searchParams.get('page') !== canonicalPage || searchParams.get('pageSize') !== canonicalPageSize) {
+      syncPaginationToUrl(parsedPage, parsedPageSize);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,6 +118,15 @@ export default function StudiesPage() {
     });
   }, [studies, indicationFilter, patientIdFilter, patientNameFilter, statusFilter, lvefFilter]);
 
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredStudies.length / pageSize));
+    const clampedPage = Math.min(page, totalPages);
+    if (clampedPage !== page) {
+      setPage(clampedPage);
+      syncPaginationToUrl(clampedPage, pageSize);
+    }
+  }, [filteredStudies.length, page, pageSize]);
+
   if (loading) {
     return (
       <main className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-16">
@@ -112,7 +160,11 @@ export default function StudiesPage() {
                 <select
                   className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm hover:bg-zinc-50"
                   value={indicationFilter}
-                  onChange={(e) => setIndicationFilter(e.target.value as StudyIndication | 'all')}
+                  onChange={(e) => {
+                    setIndicationFilter(e.target.value as StudyIndication | 'all');
+                    setPage(1);
+                    syncPaginationToUrl(1, pageSize);
+                  }}
                 >
                   <option value="all">All indications</option>
                   {indicationOptions.map((indication) => (
@@ -130,7 +182,11 @@ export default function StudiesPage() {
                 <select
                   className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm hover:bg-zinc-50"
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as StudyStatus | 'all')}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value as StudyStatus | 'all');
+                    setPage(1);
+                    syncPaginationToUrl(1, pageSize);
+                  }}
                 >
                   <option value="all">All statuses</option>
                   {statusOptions.map((status) => (
@@ -148,9 +204,11 @@ export default function StudiesPage() {
                 <select
                   className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm hover:bg-zinc-50"
                   value={lvefFilter}
-                  onChange={(e) =>
-                    setLvefFilter(e.target.value as 'all' | 'normal' | 'midly' | 'severly')
-                  }
+                  onChange={(e) => {
+                    setLvefFilter(e.target.value as 'all' | 'normal' | 'midly' | 'severly');
+                    setPage(1);
+                    syncPaginationToUrl(1, pageSize);
+                  }}
                 >
                   <option value="all">All LVEF</option>
                   <option value="normal">Normal (&gt;= 55%)</option>
@@ -170,7 +228,11 @@ export default function StudiesPage() {
                   placeholder="Type to filter"
                   className="w-44 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm hover:bg-zinc-50"
                   value={patientIdFilter}
-                  onChange={(e) => setPatientIdFilter(e.target.value)}
+                  onChange={(e) => {
+                    setPatientIdFilter(e.target.value);
+                    setPage(1);
+                    syncPaginationToUrl(1, pageSize);
+                  }}
                 />
               </label>
 
@@ -185,7 +247,11 @@ export default function StudiesPage() {
                   placeholder="Type to filter"
                   className="w-44 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm hover:bg-zinc-50"
                   value={patientNameFilter}
-                  onChange={(e) => setPatientNameFilter(e.target.value)}
+                  onChange={(e) => {
+                    setPatientNameFilter(e.target.value);
+                    setPage(1);
+                    syncPaginationToUrl(1, pageSize);
+                  }}
                 />
               </label>
 
@@ -199,6 +265,8 @@ export default function StudiesPage() {
                     setLvefFilter('all');
                     setPatientIdFilter('');
                     setPatientNameFilter('');
+                    setPage(1);
+                    syncPaginationToUrl(1, pageSize);
                   }}
                   disabled={
                     indicationFilter === 'all' &&
@@ -220,7 +288,22 @@ export default function StudiesPage() {
           </p>
         </div>
 
-        <StudiesTable studies={filteredStudies} onPatientIdClick={handlePatientIdClick} />
+        <StudiesTable
+          studies={filteredStudies}
+          page={page}
+          pageSize={pageSize}
+          pageSizeOptions={pageSizeOptions}
+          onPageChange={(nextPage) => {
+            setPage(nextPage);
+            syncPaginationToUrl(nextPage, pageSize);
+          }}
+          onPageSizeChange={(nextPageSize) => {
+            setPageSize(nextPageSize);
+            setPage(1);
+            syncPaginationToUrl(1, nextPageSize);
+          }}
+          onPatientIdClick={handlePatientIdClick}
+        />
       </section>
     </main>
   );

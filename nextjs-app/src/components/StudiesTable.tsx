@@ -1,36 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import type { StudySummary } from "@/types/Study";
 import { formatLvef } from "@/utils/formatLvef";
 
+type PageSizeOption = 10 | 25 | 50 | 100;
+
 type StudiesTableProps = {
   studies: StudySummary[];
+  page: number;
+  pageSize: PageSizeOption;
+  pageSizeOptions: readonly PageSizeOption[];
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: PageSizeOption) => void;
   onPatientIdClick?: (patientId: string) => void;
 };
 
 export default function StudiesTable({
   studies,
+  page,
+  pageSize,
+  pageSizeOptions,
+  onPageChange,
+  onPageSizeChange,
   onPatientIdClick,
 }: StudiesTableProps) {
-  const pageSizeOptions = [10, 25, 50, 100] as const;
-  const [pageSize, setPageSize] = useState<(typeof pageSizeOptions)[number]>(10);
-  const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    // When filters change, start from the first page for a predictable UX.
-    setPage(1);
-  }, [studies]);
-
   const totalItems = studies.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-
-  useEffect(() => {
-    // If a user reduces the available studies (e.g. via filters), clamp page.
-    setPage((p) => Math.min(p, totalPages));
-  }, [totalPages]);
 
   const { pageStudies, startItemIndex, endItemIndex } = useMemo(() => {
     if (totalItems === 0) {
@@ -93,8 +91,7 @@ export default function StudiesTable({
             className="rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-sm text-zinc-900 shadow-sm hover:bg-zinc-50"
             value={pageSize}
             onChange={(e) => {
-              setPageSize(Number(e.target.value) as (typeof pageSizeOptions)[number]);
-              setPage(1);
+              onPageSizeChange(Number(e.target.value) as PageSizeOption);
             }}
             aria-label="Items per page"
           >
@@ -188,7 +185,7 @@ export default function StudiesTable({
             <button
               type="button"
               className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => onPageChange(Math.max(1, page - 1))}
               disabled={page <= 1}
               aria-label="Previous page"
             >
@@ -197,7 +194,7 @@ export default function StudiesTable({
             <button
               type="button"
               className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => onPageChange(Math.min(totalPages, page + 1))}
               disabled={page >= totalPages}
               aria-label="Next page"
             >
@@ -220,7 +217,7 @@ export default function StudiesTable({
                 <button
                   key={p}
                   type="button"
-                  onClick={() => setPage(p)}
+                  onClick={() => onPageChange(p)}
                   aria-current={active ? "page" : undefined}
                   className={
                     active
